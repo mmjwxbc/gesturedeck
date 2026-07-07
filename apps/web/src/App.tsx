@@ -23,6 +23,14 @@ function commandLabel(command: string): string {
   return map[command] ?? command;
 }
 
+function getCameraUnavailableMessage(): string {
+  return [
+    "Camera API is unavailable in this browser context.",
+    "Open the app from http://localhost:5173 or deploy it with HTTPS.",
+    "Do not use file://, a plain http://192.168.x.x LAN URL, or an embedded WebView that blocks camera access.",
+  ].join("\n");
+}
+
 export default function App() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
@@ -90,6 +98,17 @@ export default function App() {
 
   async function startCamera() {
     setError(null);
+
+    if (!navigator.mediaDevices?.getUserMedia) {
+      setError(getCameraUnavailableMessage());
+      return;
+    }
+
+    if (!window.isSecureContext) {
+      setError(getCameraUnavailableMessage());
+      return;
+    }
+
     try {
       const stream = await navigator.mediaDevices.getUserMedia({
         video: { width: 640, height: 480, facingMode: "user" },
