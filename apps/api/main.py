@@ -56,10 +56,27 @@ def read_metadata(presentation_id: str) -> dict[str, Any]:
 
 
 def find_soffice() -> str:
-    for binary in ("soffice", "libreoffice"):
-        if shutil.which(binary):
-            return binary
-    raise HTTPException(status_code=500, detail="LibreOffice is not installed or not in PATH")
+    explicit_path = os.getenv("SOFFICE_PATH")
+    candidates = [
+        explicit_path,
+        shutil.which("soffice"),
+        shutil.which("libreoffice"),
+        "/Applications/LibreOffice.app/Contents/MacOS/soffice",
+        "/opt/homebrew/bin/soffice",
+        "/usr/local/bin/soffice",
+    ]
+
+    for candidate in candidates:
+        if candidate and Path(candidate).exists():
+            return str(candidate)
+
+    raise HTTPException(
+        status_code=500,
+        detail=(
+            "LibreOffice was not found. Install it with `brew install --cask libreoffice`, "
+            "or set SOFFICE_PATH=/Applications/LibreOffice.app/Contents/MacOS/soffice."
+        ),
+    )
 
 
 def convert_to_pdf(input_path: Path, output_dir: Path) -> Path:
