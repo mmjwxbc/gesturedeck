@@ -31,10 +31,57 @@ apps/
   web/   React + Vite PDF player and MediaPipe gesture controller
 ```
 
-## Run with Docker Compose
+## Requirements
+
+- Python 3.10+
+- Node.js 20+
+- LibreOffice
+- Chinese/common fonts for better PPT conversion fidelity
+
+## Install system dependencies
+
+### Ubuntu / Debian
 
 ```bash
-docker compose up --build
+sudo apt-get update
+sudo apt-get install -y libreoffice fonts-noto-cjk fonts-liberation
+```
+
+### macOS
+
+```bash
+brew install --cask libreoffice
+```
+
+For better Chinese font rendering on macOS, install the fonts used by your PPT template or export may look different from PowerPoint.
+
+## Run locally without Docker
+
+Use two terminals.
+
+### Terminal 1: backend API
+
+```bash
+cd apps/api
+python -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+export STORAGE_ROOT="$(pwd)/.data/presentations"
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Health check:
+
+```text
+http://localhost:8000/api/health
+```
+
+### Terminal 2: frontend web app
+
+```bash
+cd apps/web
+npm install
+npm run dev
 ```
 
 Open:
@@ -44,35 +91,6 @@ http://localhost:5173
 ```
 
 Camera access works on `localhost` or HTTPS. A plain HTTP LAN IP may not expose `navigator.mediaDevices.getUserMedia()`.
-
-## Run locally
-
-### Backend
-
-Install LibreOffice first. On Ubuntu:
-
-```bash
-sudo apt-get update
-sudo apt-get install -y libreoffice fonts-noto-cjk
-```
-
-Then run:
-
-```bash
-cd apps/api
-python -m venv .venv
-source .venv/bin/activate
-pip install -r requirements.txt
-uvicorn main:app --reload --host 0.0.0.0 --port 8000
-```
-
-### Frontend
-
-```bash
-cd apps/web
-npm install
-npm run dev
-```
 
 ## API
 
