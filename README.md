@@ -33,7 +33,7 @@ apps/
 
 ## Requirements
 
-- Python 3.10+
+- Python 3.12 or 3.13. Python 3.14 may fail while building native Python packages.
 - Node.js 20+
 - LibreOffice
 - Chinese/common fonts for better PPT conversion fidelity
@@ -61,9 +61,22 @@ Use two terminals.
 
 ### Terminal 1: backend API
 
+Recommended with `uv`:
+
 ```bash
 cd apps/api
-python -m venv .venv
+uv venv --python 3.12
+source .venv/bin/activate
+uv pip install -r requirements.txt
+export STORAGE_ROOT="$(pwd)/.data/presentations"
+uvicorn main:app --reload --host 0.0.0.0 --port 8000
+```
+
+Alternative with standard `venv`:
+
+```bash
+cd apps/api
+python3.12 -m venv .venv
 source .venv/bin/activate
 pip install -r requirements.txt
 export STORAGE_ROOT="$(pwd)/.data/presentations"
