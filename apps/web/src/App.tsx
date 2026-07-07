@@ -31,11 +31,17 @@ function getCameraUnavailableMessage(): string {
   ].join("\n");
 }
 
+function getErrorMessage(reason: unknown): string {
+  if (reason instanceof Error) return reason.message;
+  return String(reason);
+}
+
 export default function App() {
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const streamRef = useRef<MediaStream | null>(null);
 
   const [pdfUrl, setPdfUrl] = useState<string | null>(null);
+  const [pdfError, setPdfError] = useState<string | null>(null);
   const [fileName, setFileName] = useState<string>("");
   const [pageNumber, setPageNumber] = useState(1);
   const [pageCount, setPageCount] = useState(0);
@@ -83,6 +89,7 @@ export default function App() {
     if (!file) return;
     setUploading(true);
     setError(null);
+    setPdfError(null);
     try {
       const result = await uploadPresentation(file);
       setPdfUrl(makeApiUrl(result.pdf_url));
@@ -90,7 +97,7 @@ export default function App() {
       setPageNumber(1);
       setPageCount(0);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : String(reason));
+      setError(getErrorMessage(reason));
     } finally {
       setUploading(false);
     }
@@ -121,7 +128,7 @@ export default function App() {
       }
       setCameraEnabled(true);
     } catch (reason) {
-      setError(reason instanceof Error ? reason.message : String(reason));
+      setError(getErrorMessage(reason));
     }
   }
 
@@ -169,7 +176,9 @@ export default function App() {
         </label>
 
         {fileName && <p className="file-name">Loaded: {fileName}</p>}
+        {pdfUrl && <p className="file-name"><a href={pdfUrl} target="_blank" rel="noreferrer">Open converted PDF directly</a></p>}
         {error && <pre className="error-box">{error}</pre>}
+        {pdfError && <pre className="error-box">PDF load error: {pdfError}</pre>}
 
         <div className="controls">
           <button disabled={!canMove || pageNumber <= 1} onClick={previousPage}>Previous</button>
@@ -213,8 +222,20 @@ export default function App() {
             <Document
               file={pdfUrl}
               loading={<div className="empty-state">Loading PDF...</div>}
-              error={<div className="empty-state">Could not load the converted PDF.</div>}
-              onLoadSuccess={({ numPages }) => setPageCount(numPages)}
+              error={
+                <div className="empty-state">
+                  <h2>Could not load the converted PDF.</h2>
+                  <p>Use the link on the left to open the converted PDF directly.</p>
+                </div>
+              }
+              onLoadSuccess={({ numPages }) => {
+                setPdfError(null);
+                setPageCount(numPages);
+              }}
+              onLoadError={(reason) => {
+                console.error("PDF load error", reason);
+                setPdfError(getErrorMessage(reason));
+              }}
             >
               <Page pageNumber={pageNumber} width={Math.min(window.innerWidth - 420, 1100)} />
             </Document>
