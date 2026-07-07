@@ -1,10 +1,10 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useRef, useState, type RefObject } from "react";
 import { FilesetResolver, HandLandmarker, type NormalizedLandmark } from "@mediapipe/tasks-vision";
 
 export type GestureCommand = "goto_1" | "goto_2" | "goto_3" | "goto_4" | "prev" | "next";
 
 type Options = {
-  videoRef: React.RefObject<HTMLVideoElement | null>;
+  videoRef: RefObject<HTMLVideoElement | null>;
   enabled: boolean;
   onCommand: (command: GestureCommand) => void;
 };
